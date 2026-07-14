@@ -757,6 +757,24 @@ in
           in an effort to not break complex setups (e.g. WSL passthrough).
         '';
       };
+
+      masterIdentitySessionWrapper = mkOption {
+        type = types.nullOr types.package;
+        default = null;
+        description = ''
+          Optional command wrapper used for batch operations that decrypt with
+          master identities. The wrapper is invoked as:
+
+              <wrapper> -- <agenix-command> [args...]
+
+          It can keep plugin state alive for the duration of one command, for
+          example to reuse a hardware-backed identity without exporting it to
+          disk. The wrapper is applied to `agenix rekey` and
+          `agenix update-masterkeys`; ordinary one-file operations are not
+          changed. At most one distinct wrapper may be configured across the
+          nodes passed to `agenix-rekey.configure`.
+        '';
+      };
     };
   };
 

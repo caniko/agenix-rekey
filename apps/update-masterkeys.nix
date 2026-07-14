@@ -3,11 +3,25 @@ let
   inherit (import ../nix/lib.nix inputs)
     ageMasterEncrypt
     ageMasterDecrypt
+    masterIdentitySessionWrapper
     validRelativeSecretPaths
     ;
+
+  masterIdentitySessionPrelude =
+    if masterIdentitySessionWrapper == null then
+      ""
+    else
+      ''
+        if [[ "''${AGENIX_REKEY_MASTER_IDENTITY_SESSION_ACTIVE:-}" != true ]]; then
+          export AGENIX_REKEY_MASTER_IDENTITY_SESSION_ACTIVE=true
+          exec ${pkgs.lib.getExe masterIdentitySessionWrapper} -- "$0" "$@"
+        fi
+      '';
 in
 pkgs.writeShellScriptBin "agenix-update-masterkeys" ''
   set -uo pipefail
+
+  ${masterIdentitySessionPrelude}
 
   function die() { echo "[1;31merror:[m $*" >&2; exit 1; }
   function show_help() {

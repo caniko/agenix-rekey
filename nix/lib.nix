@@ -27,6 +27,13 @@ let
   mergeArray = f: unique (concatLists (mapAttrsToList (_: f) nodes));
   mergedAgePlugins = mergeArray (x: x.config.age.rekey.agePlugins or [ ]);
   mergedMasterIdentities = mergeArray (x: x.config.age.rekey.masterIdentities or [ ]);
+  mergedMasterIdentitySessionWrappers = mergeArray (
+    x:
+    if x.config.age.rekey.masterIdentitySessionWrapper == null then
+      [ ]
+    else
+      [ x.config.age.rekey.masterIdentitySessionWrapper ]
+  );
   mergedExtraEncryptionPubkeys = mergeArray (x: x.config.age.rekey.extraEncryptionPubkeys or [ ]);
   mergedSecrets = mergeArray (
     x: filter (y: y != null) (mapAttrsToList (_: s: s.rekeyFile) x.config.age.secrets)
@@ -46,6 +53,14 @@ let
   extraEncryptionPubkeyArgs = concatStringsSep " " (map pubkeyOpt extraEncryptionPubkeys);
   # For decryption, we require access to all master identities
   decryptionMasterIdentityArgs = toIdentityArgs mergedMasterIdentities;
+
+  masterIdentitySessionWrapper =
+    if builtins.length mergedMasterIdentitySessionWrappers > 1 then
+      throw "agenix-rekey: multiple masterIdentitySessionWrapper packages were configured; select one wrapper for all nodes"
+    else if mergedMasterIdentitySessionWrappers == [ ] then
+      null
+    else
+      builtins.head mergedMasterIdentitySessionWrappers;
 
   userFlakeDir = toString userFlake.outPath;
   relativeToFlake =
@@ -186,6 +201,7 @@ in
   inherit relativeToFlake;
   inherit validRelativeSecretPaths;
   inherit mergedSecrets;
+  inherit masterIdentitySessionWrapper;
 
   # Premade shell commands to encrypt and decrypt secrets.
   # NOTE: In order to keep compatibility with existing generator setups,

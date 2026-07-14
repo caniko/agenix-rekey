@@ -23,7 +23,19 @@ let
     userFlakeDir
     ageHostEncrypt
     ageMasterDecrypt
+    masterIdentitySessionWrapper
     ;
+
+  masterIdentitySessionPrelude =
+    if masterIdentitySessionWrapper == null then
+      ""
+    else
+      ''
+        if [[ "''${AGENIX_REKEY_MASTER_IDENTITY_SESSION_ACTIVE:-}" != true ]]; then
+          export AGENIX_REKEY_MASTER_IDENTITY_SESSION_ACTIVE=true
+          exec ${pkgs.lib.getExe masterIdentitySessionWrapper} -- "$0" "$@"
+        fi
+      '';
 
   # The derivation containing the resulting rekeyed secrets for
   # the given host configuration
@@ -247,6 +259,8 @@ let
 in
 pkgs.writeShellScriptBin "agenix-rekey" ''
   set -euo pipefail
+
+  ${masterIdentitySessionPrelude}
 
   export PATH="''${PATH:+"''${PATH}:"}"${escapeShellArg binPath}
 
