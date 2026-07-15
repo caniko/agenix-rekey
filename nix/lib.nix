@@ -44,8 +44,8 @@ let
   toIdentityArgs = identities: concatStringsSep " " (map (x: "-i ${x.identity}") identities);
 
   ageProgram = getExe (agePackage pkgs);
-  # Collect all paths to enabled age plugins
-  envPath = ''PATH="$PATH"${concatMapStrings (x: ":${escapeShellArg x}/bin") mergedAgePlugins}'';
+  # Prefer explicitly configured plugins over ambient versions from the caller's PATH.
+  envPath = ''PATH="${concatMapStrings (x: "${escapeShellArg x}/bin:") mergedAgePlugins}$PATH"'';
   # Explicitly specified recipients, containing both the explicit master pubkeys as well as the extra pubkeys
   extraEncryptionPubkeys =
     filter (x: x != null) (catAttrs "pubkey" mergedMasterIdentities) ++ mergedExtraEncryptionPubkeys;
