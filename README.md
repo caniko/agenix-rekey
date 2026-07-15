@@ -1006,6 +1006,12 @@ the command. Identity formats whose cryptographic salt changes per file may
 still require one touch per file. At most one distinct wrapper may be selected
 across the configurations passed to `agenix-rekey.configure`.
 
+Before either batch command enters the wrapper, it prints the complete operation
+plan. `agenix rekey` shows every host and secret target, files that are already
+current, orphan removals, Git staging, and any store deletion or realization.
+`agenix update-masterkeys` lists every source file whose master recipients will
+be updated. Help and path-inspection commands do not start a session.
+
 # ⌨ Environment variables
 
 ## `AGENIX_REKEY_PRIMARY_IDENTITY`
