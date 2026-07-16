@@ -85,8 +85,9 @@ let
       # This is important to ensure that the path only changes if there are actual changes to this
       # directory. If we were still using userFlake.outPath + "/secrets/[...]" or something similar,
       # then the path would change on each subsequent build because the flake path changes.
+      rekeyedDir = builtins.path { path = config.age.rekey.localStorageDir; };
       rekeyedPath =
-        builtins.path { path = config.age.rekey.localStorageDir; } + "/${identHash}-${secret.name}.age";
+        builtins.seq (builtins.readDir rekeyedDir) (rekeyedDir + "/${identHash}-${secret.name}.age");
     in
     assert assertMsg (secret.rekeyFile != null -> builtins.pathExists secret.rekeyFile) ''
       [1;31mhost ${target}: age.secrets.${secret.id}.rekeyFile ([33m${toString secret.rekeyFile}[m[1;31m) doesn't exist.[0m ${generateHint}
